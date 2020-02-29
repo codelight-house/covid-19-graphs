@@ -1,0 +1,29 @@
+{
+  "name": "covid-19-graphs",
+  "version": "0.1",
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
+    "dev": "lerna run --parallel dev",
+    "start": "cd packages/backend && yarn start",
+    "test": "lerna run test",
+    "lerna": "lerna",
+    "oldheroku-postbuild": "yarn bootstrap && yarn build"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "cacheDirectories": [
+    "node_modules",
+    "packages/backend/node_modules",
+    "packages/frontend/node_modules"
+  ],
+  "private": true,
+  "dependencies": {
+    "lerna": "^3.20.2"
+  },
+  "engines": {
+    "yarn": "1.x",
+    "node": ">=10.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "backend-covid",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "graphql": "^14.3.1",
+    "graphql-tools": "^4.0.6",
+    "apollo-link-http": "^1.5.16",
+    "apollo-server": "^2.6.3",
+    "node-fetch": "^2.6.0",
+    "express": "^4.17.1",
+    "apollo-server-express": "^2.9.13",
+    "csv-parser": "^2.3.2",
+    "lodash": "^4.17.15",
+    "luxon": "^1.22.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1",
+    "@types/faker": "^4.1.5",
+    "@types/graphql": "^14.0.7",
+    "@types/lodash": "^4.14.149",
+    "@types/luxon": "^1.21.0",
+    "ts-node": "^8.0.3",
+    "typescript": "^3.3.4000",
+    "rimraf": "^3.0.0"
+  },
+  "scripts": {
+    "dev": "yarn nodemon --exec ts-node ./src/server.ts",
+    "start": "NODE_ENV=production node build/server",
+    "build": "rimraf ./build && tsc"
+  }
+}
