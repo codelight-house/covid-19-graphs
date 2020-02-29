@@ -4,7 +4,7 @@ export const typeDefs = gql`
   type DataRow {
     id: String!
     region: String!
-    subregion: String
+    subRegion: String
     lat: Float
     lng: Float
     confirmed: Int
@@ -16,7 +16,7 @@ export const typeDefs = gql`
   input DataRowFilter {
     id: String
     region: String
-    subregion: String
+    subRegion: String
     date: String
   }
 
