@@ -119,7 +119,6 @@ function CovidDataLoader(props) {
   const filteredData = data.dataRows.filter((row) => {
     return row.date === props.date;
   });
-  // console.log(data.dataRows.length, filteredData.length);
   return (
     <div style={{ width: "750px", height: "500px" }}>
       <CovidGraph data={filteredData}/>
@@ -152,11 +151,11 @@ function CovidGraph(props) {
       label="properties.name"
       value="confirmed"
       valueFormat="d"
-
       projectionTranslation={[0.5, 0.5]}
       projectionRotation={[0, 0, 0]}
       enableGraticule={true}
-      graticuleLineColor="#dddddd"
+      graticuleLineColor="#4cecff"
+      graticuleLineWidth={19}
       borderWidth={0.5}
       borderColor="#152538"
       legends={[

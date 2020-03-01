@@ -16,10 +16,11 @@ Data sources:
   * transform external data - done
   * serve data as GraphQl API - done
   * time series API
-    * aggregate dates
-    * filter by date
+    * aggregate by country
+    * filter by date - done
   * report API
-    * current cumulated confirmed, deaths, recovered
+    * calculate cumulated confirmed, deaths, recovered - done
+    * serve calculated data
      
 * React frontend with animated graphs
   * react map library - done
