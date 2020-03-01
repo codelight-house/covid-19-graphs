@@ -2,14 +2,17 @@ import * as path from "path";
 
 import * as express from 'express';
 import { ApolloServer } from 'apollo-server-express';
-// import deliveryMethods from './deliveryMethods';
-import { getDataCollection, DataCollection } from "./covid-data-provider";
+import { CovidDataProvider, ITimeSeriesParams } from "./CovidDataProvider";
 import {typeDefs} from "./graphql-type-defs"
 
 const port = process.env.PORT || 4000;
 const frontendAssetsPath = process.env.FRONTEND_ASSETS_PATH || path.join(__dirname, '../../frontend/build' );
 
-let all: DataCollection
+const covidDataProvider = new CovidDataProvider();
+covidDataProvider.on("update", async () => {
+  const stats = await covidDataProvider.getStats();
+  console.log(`Data collection updated`, stats);
+});
 
 function debug(parent, params, context, info) {
   console.log('----- parent: ', parent);
@@ -18,30 +21,9 @@ function debug(parent, params, context, info) {
   // console.log('----- info: ', info);
 }
 
-interface IDataRowsParams {
-  limit: number;
-  skip: number;
-  filter?: {
-    id?: string;
-    region?: string;
-    subregion?: string;
-    date?: string;
-  }
-}
-
 const resolvers = {
-  // ShippingItem: {
-  //   __resolveType(entity, context, info){
-  //     if(entity.firstName){
-  //       return 'PersonShippingItem';
-  //     } else {
-  //       return 'ParcelShippingItem';
-  //     }
-  //   },
-  // },
   DataRow: {
     history: (parent, params, context, info) => {
-      // debug(parent, params, context, info)
       let limit = params.limit || 10;
       let skip = params.skip || 0;
 
@@ -49,15 +31,14 @@ const resolvers = {
     },
   },
   Query: {
-    dataRows: (parent, params: IDataRowsParams, context, info) => {
-      let limit = params.limit || 999;
-      let skip = params.skip || 0;
-      let filtered: DataCollection;
-      if (params.filter) {
-        // todo
-      }
-      const page = all.slice(skip, skip + limit);
-      return page;
+    dataRows: async (parent, params: ITimeSeriesParams, context, info) => {
+      return await covidDataProvider.getTimeSeriesCollection(params);
+    },
+    availableDates: async () => {
+      return await covidDataProvider.getAvailableDates();
+    },
+    availableRegionNames: async () => {
+      return await covidDataProvider.getAvailableRegionNames();
     },
   },
 };
@@ -79,6 +60,4 @@ app.use(express.static(frontendAssetsPath));
 
 app.listen(port, async () => {
   console.log(`🚀  Server ready at port: ${port}`);
-  all = await getDataCollection();
-  console.log(`Data collection fetched: ${all.length} rows`);
 });

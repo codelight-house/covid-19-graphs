@@ -30,5 +30,7 @@ export const typeDefs = gql`
 
   type Query {
     dataRows(skip: Int, limit: Int, filter: DataRowFilter): [DataRow]
+    availableDates: [String!]!
+    availableRegionNames: [String!]!
   }
 `;
