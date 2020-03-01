@@ -18,6 +18,7 @@ export interface IHistoryRow {
 
 export interface IDataRow {
   id: string;
+  date: string;
   region: string;
   subRegion: string;
   lat: number;
@@ -88,6 +89,7 @@ function transformCsvRows(rows: any[], valueFieldName: ValueFieldName): IDataRow
     const lastHistoryItem = _.last(history);
     return {
       id: `${region}/${subRegion}`,
+      date: lastHistoryItem ? lastHistoryItem.date : "",
       region,
       subRegion,
       lat: parseFloat(dataRow.Lat),
@@ -120,6 +122,21 @@ function mergeCollections (collections: DataCollection[]): DataCollection {
   }
   return result;
 };
+
+function removeEmptyHistoryRows(collection: DataCollection): DataCollection {
+  const clonedCollection = _.cloneDeep(collection);
+  clonedCollection.forEach(dataRow => {
+    const prunedHistory: IHistoryRow[] = [];
+    dataRow.history.forEach((historyItem) => {
+      if (historyItem.confirmed || historyItem.deaths || historyItem.recovered) {
+        prunedHistory.push(historyItem);
+      }
+    });
+    dataRow.history = prunedHistory;
+  })
+
+  return clonedCollection;
+}
 
 export async function getDataCollection(): Promise<DataCollection> {
   // data source: https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series
@@ -154,7 +171,7 @@ export async function getDataCollection(): Promise<DataCollection> {
   const transformedDeaths = transformCsvRows(deaths, "deaths");
   const transformedRecovered = transformCsvRows(recovered, "recovered");
 
-  return _.sortBy(mergeCollections([transformedConfirmed, transformedDeaths, transformedRecovered]), "id" );
+  return _.sortBy(removeEmptyHistoryRows(mergeCollections([transformedConfirmed, transformedDeaths, transformedRecovered])), "id" );
 }
 
 export async function getDenormalizedDataCollection(collection: DataCollection): Promise<DenormalizedDataCollection> {

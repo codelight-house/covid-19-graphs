@@ -3,6 +3,7 @@ import { gql } from "apollo-server";
 export const typeDefs = gql`
   type DataRow {
     id: String!
+    date: String!
     region: String!
     subRegion: String
     lat: Float
