@@ -6,9 +6,11 @@ import * as csv from "csv-parser";
 import {DateTime} from "luxon";
 import * as _ from "lodash";
 import fetch from "node-fetch";
+import * as parseDuration from "parse-duration";
 
 const REGION_FIELD = "Country/Region";
 const SUBREGION_FIELD = "Province/State";
+const RELOAD_INTERVAL = process.env.RELOAD_INTERVAL || "1h";
 
 // @TODO use lokijs to manipualte on timeseries data
 
@@ -212,6 +214,10 @@ export class CovidDataProvider extends EventEmitter {
     super();
 
     this.loadData().catch(error => console.error);
+    const reloadInterval = parseDuration(RELOAD_INTERVAL);
+    setInterval(() => {
+      this.loadData().catch(error => console.error);
+    }, reloadInterval);
   }
 
   private async loadData() {
