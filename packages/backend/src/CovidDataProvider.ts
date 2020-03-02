@@ -10,7 +10,6 @@ import fetch from "node-fetch";
 const REGION_FIELD = "Country/Region";
 const SUBREGION_FIELD = "Province/State";
 
-// @TODO build denormalized time series row at start and calculate all other results from time series
 // @TODO use lokijs to manipualte on timeseries data
 
 export interface IHistoryRow {
@@ -27,7 +26,7 @@ export interface ITimeSeriesRow {
   subRegion: string;
   lat: number;
   lng: number;
-  history: IHistoryRow[];
+  // history: IHistoryRow[];
   confirmed?: number;
   deaths?: number;
   recovered?: number;
@@ -55,10 +54,12 @@ export type ValueFieldName = "confirmed" | "deaths" | "recovered";
 export type DataCollection = ITimeSeriesRow[];
 export type RegionCollection = IRegion[];
 
+/**
+ * parse input stream CSV and return object with fieldNames equals to the header values
+ */
 function readCsv(inputStream: NodeJS.ReadableStream): Promise<any[]> {
   return new Promise((resolve, reject) => {
     const result: any[] = [];
-
 
     inputStream.pipe(csv())
       .on('data', (data) => result.push(data))
@@ -69,6 +70,9 @@ function readCsv(inputStream: NodeJS.ReadableStream): Promise<any[]> {
   });
 }
 
+/**
+ * get from original csv row all column values with date format
+ */
 function getHistoryFromRow(dataRow: any, valueField: ValueFieldName): IHistoryRow[] {
   const history = Object.keys(dataRow)
     .map(key => {
@@ -83,23 +87,30 @@ function getHistoryFromRow(dataRow: any, valueField: ValueFieldName): IHistoryRo
   return _.sortBy(history, ["date"]);
 };
 
-function transformCsvRows(rows: any[], valueFieldName: ValueFieldName): ITimeSeriesRow[] {
-  return rows.map((dataRow) => {
+/**
+ * parse array of parsed csv rows to array of time series rows
+ */
+function transformCsvRows(rows: any[], valueFieldName: ValueFieldName): DataCollection {
+  const result: DataCollection = [];
+  rows.forEach((dataRow) => {
     const region = dataRow[REGION_FIELD];
     const subRegion = dataRow[SUBREGION_FIELD];
     const history = getHistoryFromRow(dataRow, valueFieldName);
-    const lastHistoryItem = _.last(history);
-    return {
-      id: `${region}/${subRegion}`,
-      date: lastHistoryItem ? lastHistoryItem.date : "",
-      region,
-      subRegion,
-      lat: parseFloat(dataRow.Lat),
-      lng: parseFloat(dataRow.Long),
-      history,
-      [valueFieldName]: lastHistoryItem ? lastHistoryItem[valueFieldName] : undefined,
-    }
+    history.forEach(historyRow => {
+      const timeSeriesRow: ITimeSeriesRow = {
+        id: `${region}/${subRegion}/${historyRow.date}`,
+        date: historyRow.date,
+        region,
+        subRegion,
+        lat: parseFloat(dataRow.Lat),
+        lng: parseFloat(dataRow.Long),
+        [valueFieldName]: historyRow[valueFieldName],
+      }
+      result.push(timeSeriesRow);
+    })
   })
+
+  return result;
 }
 
 function mergeCollections (collections: DataCollection[]): DataCollection {
@@ -109,35 +120,23 @@ function mergeCollections (collections: DataCollection[]): DataCollection {
   let result: DataCollection = collections[0];
   for (let collectionIndex = 1; collectionIndex < collections.length; collectionIndex++) {
     result = result.map(dataRow1 => {
-      const newRow1 = _.omit(dataRow1, ["history"]);
+      const newRow1 = _.clone(dataRow1);
       const id = dataRow1.id;
       const dataRow2 = _.find(collections[collectionIndex], { id });
       if (!dataRow2) {
         throw new Error(`Unable to find id = ${id}`);
       }
-      const newRow2 = _.omit(dataRow2, ["history"]);
-      const mergedHistory = _.map(_.merge({}, _.keyBy(dataRow1.history, "date"), _.keyBy(dataRow2.history, "date")), (historyRow) => historyRow);
-      const result: Partial<ITimeSeriesRow> = _.merge({}, newRow1, newRow2);
-      result.history = mergedHistory;
-      return result as ITimeSeriesRow;
+      const newRow2 = _.clone(dataRow2);
+      return _.merge({}, newRow1, newRow2);
     });
   }
   return result;
 };
 
-function removeEmptyHistoryRows(collection: DataCollection): DataCollection {
-  const clonedCollection = _.cloneDeep(collection);
-  clonedCollection.forEach(dataRow => {
-    const prunedHistory: IHistoryRow[] = [];
-    dataRow.history.forEach((historyItem) => {
-      if (historyItem.confirmed || historyItem.deaths || historyItem.recovered) {
-        prunedHistory.push(historyItem);
-      }
-    });
-    dataRow.history = prunedHistory;
-  })
-
-  return clonedCollection;
+function removeEmptyRows(collection: DataCollection): DataCollection {
+  return collection.filter(dataRow => {
+    return (dataRow.confirmed || dataRow.deaths || dataRow.recovered);
+  });
 }
 
 async function getDataCollection(): Promise<DataCollection> {
@@ -172,23 +171,10 @@ async function getDataCollection(): Promise<DataCollection> {
   const transformedConfirmed = transformCsvRows(confirmed, "confirmed");
   const transformedDeaths = transformCsvRows(deaths, "deaths");
   const transformedRecovered = transformCsvRows(recovered, "recovered");
+  const mergedCollections = mergeCollections([transformedConfirmed, transformedDeaths, transformedRecovered]);
 
-  return _.sortBy(removeEmptyHistoryRows(mergeCollections([transformedConfirmed, transformedDeaths, transformedRecovered])), "id" );
+  return _.sortBy(removeEmptyRows(mergedCollections), "id" );
 }
-
-async function getDenormalizedDataCollection(collection: DataCollection): Promise<DataCollection> {
-  const result: DataCollection = [];
-  collection.forEach(dataRow => {
-    dataRow.history.forEach(historyItem => {
-      const timeSeriesRow = _.clone(dataRow);
-      const newDenormalizedRow: Partial<ITimeSeriesRow> = _.merge(timeSeriesRow, historyItem);
-      newDenormalizedRow.id = `${newDenormalizedRow.region}/${newDenormalizedRow.subRegion}/${historyItem.date}`;
-      result.push(newDenormalizedRow as ITimeSeriesRow);
-    });
-  });
-  return result;
-}
-
 
 async function getAvailableDates(collection: DataCollection): Promise<string[]> {
   const dates: any = {};
@@ -217,7 +203,6 @@ interface ICumulativeResult {
 }
 
 export class CovidDataProvider extends EventEmitter {
-  private currentDataCollection: DataCollection = [];
   private fullDataCollection: DataCollection = [];
   private availableDates: string[] = [];
   private availableRegionNames: string[] = [];
@@ -231,8 +216,7 @@ export class CovidDataProvider extends EventEmitter {
 
   private async loadData() {
     console.log((new Date()).toISOString(), 'data loading started');
-    this.currentDataCollection = await getDataCollection();
-    this.fullDataCollection = await getDenormalizedDataCollection(this.currentDataCollection);
+    this.fullDataCollection = await getDataCollection();
     this.availableDates = await getAvailableDates(this.fullDataCollection);
     this.availableRegionNames = await getAvailableRegionNames(this.fullDataCollection);
     this.stats = await this.calculateStats();
@@ -269,10 +253,6 @@ export class CovidDataProvider extends EventEmitter {
     const page = currentDataRows.slice(skip, skip + limit);
     return page;
   }
-
-  // async getCurrentDataCollection(params: ITimeSeriesParams): Promise<DataCollection> {
-  //   return this.pageAndFilter(this.currentDataCollection, params);
-  // }
 
   public async getTimeSeriesCollection(params: ITimeSeriesParams): Promise<DataCollection> {
     return this.pageAndFilter(this.fullDataCollection, params);

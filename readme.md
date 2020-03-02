@@ -27,4 +27,4 @@ Data sources:
   * fetch map source
   * match map and covid data
 
-
+* Add unit tests 

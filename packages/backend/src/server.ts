@@ -23,12 +23,12 @@ function debug(parent, params, context, info) {
 
 const resolvers = {
   DataRow: {
-    history: (parent, params, context, info) => {
-      let limit = params.limit || 10;
-      let skip = params.skip || 0;
+    // history: (parent, params, context, info) => {
+    //   let limit = params.limit || 10;
+    //   let skip = params.skip || 0;
 
-      return parent.history.slice(skip, skip + limit);;
-    },
+    //   return parent.history.slice(skip, skip + limit);;
+    // },
   },
   Query: {
     dataRows: async (parent, params: ITimeSeriesParams, context, info) => {

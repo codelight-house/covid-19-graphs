@@ -11,7 +11,7 @@ export const typeDefs = gql`
     confirmed: Int
     deaths: Int
     recovered: Int
-    history(skip: Int, limit: Int): [HistoryRow!]
+    # history(skip: Int, limit: Int): [HistoryRow!]
   }
 
   input DataRowFilter {
@@ -21,12 +21,12 @@ export const typeDefs = gql`
     date: String
   }
 
-  type HistoryRow {
-    date: String!
-    confirmed: Int
-    deaths: Int
-    recovered: Int
-  }
+  # type HistoryRow {
+  #   date: String!
+  #   confirmed: Int
+  #   deaths: Int
+  #   recovered: Int
+  # }
 
   type Query {
     dataRows(skip: Int, limit: Int, filter: DataRowFilter): [DataRow]
