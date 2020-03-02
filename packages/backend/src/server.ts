@@ -40,9 +40,11 @@ const resolvers = {
     availableRegionNames: async () => {
       return await covidDataProvider.getAvailableRegionNames();
     },
+    stats: async () => {
+      return await covidDataProvider.getStats();
+    },
   },
 };
-
 
 const server = new ApolloServer({
   typeDefs,
