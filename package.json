@@ -1,6 +1,6 @@
 {
   "name": "covid-19-graphs",
-  "version": "0.1",
+  "version": "0.1.0",
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
