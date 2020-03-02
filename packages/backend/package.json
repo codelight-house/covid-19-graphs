@@ -12,7 +12,8 @@
     "apollo-server-express": "^2.9.13",
     "csv-parser": "^2.3.2",
     "lodash": "^4.17.15",
-    "luxon": "^1.22.0"
+    "luxon": "^1.22.0",
+    "parse-duration": "^0.1.2"
   },
   "devDependencies": {
     "nodemon": "^1.19.1",

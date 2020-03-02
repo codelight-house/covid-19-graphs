@@ -30,10 +30,12 @@ yarn start
 
 http://localhost:4000
 
-Default port 4000 can be configured via `PORT` environment value:
-```
-PORT=9999 yarn start
-``` 
+
+## Configurarion
+
+Enviromental variables:
+* `PORT` - backend server port (default: `4000`),
+* `RELOAD_INTERVAL` - autoreload datata interval, can be used `h`, `s`, `m` units (default: `1h`),
 
 ## TODO
 
