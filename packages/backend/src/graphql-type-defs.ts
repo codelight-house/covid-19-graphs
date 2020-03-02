@@ -28,9 +28,25 @@ export const typeDefs = gql`
   #   recovered: Int
   # }
 
+  type Stats {
+    timeSeriesCount: Int!
+    regionCount: Int!
+    datesCount: Int!
+    firstDate: String
+    lastDate: String
+    lastCumulative: CumulativeResult
+  }
+
+  type CumulativeResult {
+    confirmed: Int!
+    deaths: Int!
+    recovered: Int!
+  }
+
   type Query {
     dataRows(skip: Int, limit: Int, filter: DataRowFilter): [DataRow]
     availableDates: [String!]!
     availableRegionNames: [String!]!
+    stats: Stats!
   }
 `;

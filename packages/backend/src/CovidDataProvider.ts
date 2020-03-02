@@ -51,13 +51,14 @@ export interface IRegion {
   code?: string;
   subregions?: IRegion[]
 }
+
 interface IStats {
   timeSeriesCount: number;
   regionCount: number;
   datesCount: number;
   firstDate?: string;
   lastDate?: string;
-  lastCumulative?: ICumulativeResult
+  lastCumulative: ICumulativeResult
 }
 
 interface ICumulativeResult {
@@ -240,11 +241,11 @@ export class CovidDataProvider extends EventEmitter {
 
   private async calculateStats(): Promise<IStats> {
     const lastDate = await this.getLastDate();
-    const lastCumulative = lastDate ? await this.getCumulativeCount(
+    const lastCumulative: ICumulativeResult = lastDate ? await this.getCumulativeCount(
       await this.getTimeSeriesCollection({
         filter: { date: lastDate }
       })
-    ) : undefined;
+    ) : { confirmed: 0, deaths: 0, recovered: 0};
     const result: IStats = {
       timeSeriesCount: this.fullDataCollection.length,
       regionCount: this.availableRegionNames.length,
@@ -298,7 +299,10 @@ export class CovidDataProvider extends EventEmitter {
     }, {confirmed: 0, deaths: 0, recovered: 0});
   }
 
-  public async getStats(): Promise<IStats|undefined> {
+  public async getStats(): Promise<IStats> {
+    if (!this.stats) {
+      throw new Error("Stats is not ready")
+    }
     return this.stats;
   }
 }
