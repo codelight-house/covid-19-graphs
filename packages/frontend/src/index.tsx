@@ -1,6 +1,7 @@
 import { ApolloProvider } from "react-apollo";
 import ApolloClient from "apollo-boost";
-import React, {useState} from "react";
+import * as React from "react";
+import {useState} from "react";
 import { render } from "react-dom";
 import {
   useQuery,
@@ -12,12 +13,12 @@ import { ResponsiveChoropleth } from '@nivo/geo'
 // import worldCountries from "./world_countries-v2.json";
 import worldCountries from "./world_countries-from-nivo.json";
 
-const countriesMap = {};
-worldCountries.features.forEach(feature => {
+// @TODO split into separate components
+
+const countriesMap: any = {};
+worldCountries.features.forEach((feature: any) => {
   countriesMap[feature.properties.name] = feature.id;
 })
-
-// console.log(countriesMap);
 
 const cache = new InMemoryCache({
 });
@@ -65,7 +66,7 @@ const COVID_AVAILABLE_DATES = gql`
 
 const CovidAnimationController = () => {
   const { loading, error, data } = useQuery(COVID_AVAILABLE_DATES);
-  const [ currentDate, setCurrentDate ] = useState(null);
+  const [ currentDate, setCurrentDate ] = useState<string|null>(null);
   const [ isAnimationActive, setAnimationActive ] = useState(true);
 
   if (loading || !data) {
@@ -75,7 +76,7 @@ const CovidAnimationController = () => {
     return <p>Error :(</p>;
   }
 
-  if (!currentDate) {
+  if (!currentDate && data.availableDates[0]) {
     setCurrentDate(data.availableDates[0]);
   }
 
@@ -84,16 +85,21 @@ const CovidAnimationController = () => {
     const nextIndex = (currentIndex + 1) % data.availableDates.length;
     setCurrentDate(data.availableDates[nextIndex]);
   };
-  let animationTimeout = null;
+  let animationTimeout: any = null;
   if (isAnimationActive) {
     animationTimeout = setTimeout(selectNextDate, 200);
   }
 
-  const dates = data.availableDates.map(date => {
+  const dates = data.availableDates.map((date: string) => {
     return <button key={date} onClick={()=>{
       setCurrentDate(date);
+      setAnimationActive(false);
+      if (animationTimeout) {
+        clearTimeout(animationTimeout);
+      }
     }} style={{fontWeight: (date === currentDate) ? "bold" : "normal"}}> {date} </button>
   })
+  const dataLoader = currentDate ? (<CovidDataLoader date={currentDate}/>) : null;
   return (
     <>
       <button onClick={() => {
@@ -104,19 +110,23 @@ const CovidAnimationController = () => {
       }}>{isAnimationActive ? "pause" : "start"}</button>
       {dates}
       <div style={{ width: "750px", height: "500px" }}>
-        <CovidDataLoader date={currentDate}/>
+        {dataLoader}
       </div>
     </>
   );
 }
 
-function CovidDataLoader(props) {
+interface IDataLoaderProps {
+  date: string;
+}
+
+function CovidDataLoader(props: IDataLoaderProps) {
   const { loading, error, data } = useQuery(COVID_ALL_DATA_ROWS);
 
   if (loading || !data) return <p>Loading...</p>;
   if (error) return <p>Error :(</p>;
 
-  const filteredData = data.dataRows.filter((row) => {
+  const filteredData = data.dataRows.filter((row: any) => {
     return row.date === props.date;
   });
   return (
@@ -126,7 +136,11 @@ function CovidDataLoader(props) {
   )
 }
 
-function CovidGraph(props) {
+interface ICovidGraphProps {
+  data: any[]
+}
+
+function CovidGraph(props: ICovidGraphProps) {
   return (
     <ResponsiveChoropleth
       match={(feature, dataItem) => {
@@ -158,7 +172,7 @@ function CovidGraph(props) {
       graticuleLineWidth={19}
       borderWidth={0.5}
       borderColor="#152538"
-      legends={[
+      // legends={[
         // {
         //   anchor: 'bottom-left',
         //   direction: 'column',
@@ -182,7 +196,7 @@ function CovidGraph(props) {
         //     }
         //   ]
         // }
-      ]}
+      // ]}
     />
   )
 }
