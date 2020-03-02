@@ -51,6 +51,20 @@ export interface IRegion {
   code?: string;
   subregions?: IRegion[]
 }
+interface IStats {
+  timeSeriesCount: number;
+  regionCount: number;
+  datesCount: number;
+  firstDate?: string;
+  lastDate?: string;
+  lastCumulative?: ICumulativeResult
+}
+
+interface ICumulativeResult {
+  confirmed: number;
+  deaths: number;
+  recovered: number;
+}
 
 export type ValueFieldName = "confirmed" | "deaths" | "recovered";
 export type DataCollection = ITimeSeriesRow[];
@@ -198,17 +212,11 @@ export async function getRegions(collection: DataCollection): Promise<RegionColl
   throw new Error("Not implemented");
 }
 
-interface ICumulativeResult {
-  confirmed: number;
-  deaths: number;
-  recovered: number;
-}
-
 export class CovidDataProvider extends EventEmitter {
   private fullDataCollection: DataCollection = [];
   private availableDates: string[] = [];
   private availableRegionNames: string[] = [];
-  private stats: any = {};
+  private stats?: IStats;
 
   constructor () {
     super();
@@ -230,14 +238,14 @@ export class CovidDataProvider extends EventEmitter {
     this.emit('update');
   }
 
-  private async calculateStats() {
+  private async calculateStats(): Promise<IStats> {
     const lastDate = await this.getLastDate();
     const lastCumulative = lastDate ? await this.getCumulativeCount(
       await this.getTimeSeriesCollection({
         filter: { date: lastDate }
       })
-    ) : {};
-    const result = {
+    ) : undefined;
+    const result: IStats = {
       timeSeriesCount: this.fullDataCollection.length,
       regionCount: this.availableRegionNames.length,
       datesCount: this.availableDates.length,
@@ -272,17 +280,15 @@ export class CovidDataProvider extends EventEmitter {
     return this.availableRegionNames;
   }
 
-  public async getLastDate(): Promise<string|null> {
-    const last = _.last(this.availableDates);
-    return last ? last : null;
+  public async getLastDate(): Promise<string|undefined> {
+    return _.last(this.availableDates);
   }
 
-  public async getFirstDate(): Promise<string|null> {
-    const first = _.first(this.availableDates);
-    return first ? first : null;
+  public async getFirstDate(): Promise<string|undefined> {
+    return _.first(this.availableDates);
   }
 
-  private async getCumulativeCount(collection: DataCollection) {
+  private async getCumulativeCount(collection: DataCollection): Promise<ICumulativeResult> {
     return _.reduce<ITimeSeriesRow, ICumulativeResult>(collection, (prevValue, dataRow, all) => {
       return {
         confirmed: prevValue.confirmed + (dataRow.confirmed ? dataRow.confirmed : 0),
@@ -292,7 +298,7 @@ export class CovidDataProvider extends EventEmitter {
     }, {confirmed: 0, deaths: 0, recovered: 0});
   }
 
-  public async getStats() {
+  public async getStats(): Promise<IStats|undefined> {
     return this.stats;
   }
 }
