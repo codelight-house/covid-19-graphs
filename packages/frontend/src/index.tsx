@@ -58,6 +58,23 @@ const COVID_ALL_DATA_ROWS = gql`
   }
 `;
 
+const COVID_STATS = gql`
+  query {
+    stats {
+      timeSeriesCount
+      regionCount
+      datesCount
+      firstDate
+      lastDate
+      lastCumulative {
+        confirmed
+        deaths
+        recovered
+      }
+    }
+  }
+`;
+
 const COVID_AVAILABLE_DATES = gql`
   query {
     availableDates
@@ -120,6 +137,23 @@ interface IDataLoaderProps {
   date: string;
 }
 
+function CovidStats() {
+  const { loading, error, data } = useQuery(COVID_STATS);
+
+  if (loading || !data) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
+
+  return (
+    <div>
+      The last data:<br />
+      Date: {data.stats.lastDate}<br />
+      Confirmed: {data.stats.lastCumulative.confirmed}<br />
+      Deaths: {data.stats.lastCumulative.deaths}<br />
+      Recovered: {data.stats.lastCumulative.recovered}
+    </div>
+  )
+}
+
 function CovidDataLoader(props: IDataLoaderProps) {
   const { loading, error, data } = useQuery(COVID_ALL_DATA_ROWS);
 
@@ -169,7 +203,7 @@ function CovidGraph(props: ICovidGraphProps) {
       projectionRotation={[0, 0, 0]}
       enableGraticule={true}
       graticuleLineColor="#4cecff"
-      graticuleLineWidth={19}
+      graticuleLineWidth={50}
       borderWidth={0.5}
       borderColor="#152538"
       // legends={[
@@ -204,6 +238,7 @@ function CovidGraph(props: ICovidGraphProps) {
 const App = () => (
   <ApolloProvider client={client}>
     <CovidAnimationController />
+    <CovidStats />
   </ApolloProvider>
 );
 

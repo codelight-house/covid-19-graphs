@@ -35,7 +35,7 @@ http://localhost:4000
 
 Enviromental variables:
 * `PORT` - backend server port (default: `4000`),
-* `RELOAD_INTERVAL` - autoreload datata interval, can be used `h`, `s`, `m` units (default: `1h`),
+* `RELOAD_INTERVAL` - autoreload data interval, can be used `h`, `s`, `m` units (default: `1h`),
 
 ## TODO
 
