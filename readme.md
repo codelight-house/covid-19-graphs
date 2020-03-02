@@ -1,6 +1,6 @@
 # COVID-19-graphs
 
-COVID-19 growth animations and graphs
+COVID-19 growth animations and graphs: https://covid-19-graphs.herokuapp.com/
 
 Data sources: 
 * covid-19 data
