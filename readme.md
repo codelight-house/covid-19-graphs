@@ -9,6 +9,32 @@ Data sources:
   * http://geojson.xyz/
   * https://geojson-maps.ash.ms/
 
+## Development
+
+```
+yarn install
+yarn bootstrap
+yarn dev
+```
+
+http://localhost:3000
+
+In development mode all data is fetched from local static csv files (old COVID data source). When needed to fetch current datafiles you should set production mode: `NODE_ENV=production yarn dev`
+
+## Deployment
+
+```
+yarn build
+yarn start
+```
+
+http://localhost:4000
+
+Default port 4000 can be configured via `PORT` environment value:
+```
+PORT=9999 yarn start
+``` 
+
 ## TODO
 
 * Graphql API
