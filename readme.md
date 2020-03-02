@@ -40,18 +40,10 @@ Enviromental variables:
 ## TODO
 
 * Graphql API
-  * fetch external data - done
-  * transform external data - done
-  * serve data as GraphQl API - done
   * time series API
     * aggregate by country
-    * filter by date - done
-  * report API
-    * calculate cumulated confirmed, deaths, recovered - done
-    * serve calculated data
      
 * React frontend with animated graphs
-  * react map library - done
   * fetch map source
   * match map and covid data
 
