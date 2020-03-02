@@ -11,7 +11,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ResponsiveChoropleth } from '@nivo/geo'
 // import * as fuzzy from "fuzzy";
 // import worldCountries from "./world_countries-v2.json";
-import worldCountries from "./world_countries-from-nivo.json";
+import worldCountries from "./maps/world_countries-from-nivo.json";
 
 // @TODO split into separate components
 
